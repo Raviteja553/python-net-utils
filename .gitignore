@@ -1,1 +1,4 @@
 python-log.log
+
+# Private logs and sensitive artifacts
+private/
