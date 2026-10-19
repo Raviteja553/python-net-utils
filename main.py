@@ -1,1 +1,2 @@
-def ping_host(ip):\n    return f"Pinging {ip}..."
+def ping_host(ip):
+    return f"Pinging {ip}..."
