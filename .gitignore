@@ -20,3 +20,6 @@ htmlcov/
 *.tfstate.*
 *.pem
 *.key
+
+# Private logs and sensitive artifacts
+private/
