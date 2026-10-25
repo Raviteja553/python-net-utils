@@ -1,4 +1,6 @@
 python-log.log
+__pycache__/
+.venv/.coverage
 # Python
 __pycache__/
 *.py[cod]
