@@ -1,0 +1,110 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "python-net-utils"            # distribution name (pip install python-net-utils)
+version = "0.1.0"
+description = "Small, typed network automation helpers. Lab project, not production."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Ravi Teja Ginukuntla" }]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "pre-commit>=3.8",
+]
+
+[project.scripts]
+net-utils = "net_utils.cli:main"
+
+# The import package is net_utils (src/net_utils). Explicit, so the wheel never guesses.
+[tool.hatch.build.targets.wheel]
+packages = ["src/net_utils"]
+
+# ---------------------------------------------------------------- ruff
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]          # lets isort tell first-party from third-party
+extend-exclude = ["build", "dist", ".venv"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle errors and warnings
+    "F",        # pyflakes: unused imports, undefined names
+    "I",        # isort: import ordering
+    "B",        # bugbear: likely bugs (mutable defaults, bare except)
+    "UP",       # pyupgrade: modern syntax for your Python version
+    "N",        # pep8-naming
+    "C4",       # comprehension simplifications
+    "SIM",      # simplifiable code
+    "PTH",      # use pathlib instead of os.path
+    "PT",       # pytest style
+    "S",        # bandit: security (hardcoded passwords, subprocess, assert)
+    "T20",      # no stray print() calls; use logging
+    "LOG", "G", # logging mistakes and logging format strings
+    "ARG",      # unused arguments
+    "PL",       # pylint subset
+    "RUF",      # ruff-specific rules
+]
+ignore = [
+    "PLR0913",  # too many arguments: common in config-rendering helpers
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+    "S101",     # assert is how pytest tests work
+    "PLR2004",  # magic numbers are fine in expected values
+    "ARG",      # fixtures often go unused by design
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["net_utils"]
+
+[tool.ruff.format]
+quote-style = "double"
+docstring-code-format = true
+
+# ---------------------------------------------------------------- mypy
+[tool.mypy]
+python_version = "3.11"
+mypy_path = "src"
+files = ["src", "tests"]
+strict = true                    # all optional strictness flags on
+warn_unreachable = true
+warn_unused_configs = true
+show_error_codes = true
+pretty = true
+enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
+
+# Third-party libraries without type stubs get listed here as you add them,
+# e.g. netmiko, napalm. Keep the list short and name each module.
+# [[tool.mypy.overrides]]
+# module = ["netmiko.*"]
+# ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false   # test functions need not be annotated
+
+# -------------------------------------------------------------- pytest
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+pythonpath = ["src"]
+
+# ------------------------------------------------------------ coverage
+[tool.coverage.run]
+source = ["net_utils"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+exclude_also = ["if __name__ == .__main__.:"]
