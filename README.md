@@ -14,11 +14,11 @@ or emulated devices. Nothing comes from a work network.
 
 ```
 pyproject.toml     project metadata plus ruff, mypy, pytest and coverage config
-src/net_utils/     the importable package (src layout)
+src/netutil/     the importable package (src layout)
 tests/             pytest tests
 ```
 
-Install name is `python-net-utils`; import name is `net_utils`.
+Install name is `python-net-utils`; import name is `netutil`.
 
 ## How to run
 
@@ -31,7 +31,7 @@ ruff check .
 ruff format --check .
 mypy
 pytest --cov
-net-utils --version
+neutil --version
 ```
 
 ## What it proves

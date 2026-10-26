@@ -7,7 +7,7 @@ import logging
 import sys
 from collections.abc import Sequence
 
-from net_utils import __version__
+from netutil import __version__
 
 logger = logging.getLogger(__name__)
 

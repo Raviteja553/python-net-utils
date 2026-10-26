@@ -2,8 +2,8 @@
 
 import pytest
 
-from net_utils import __version__
-from net_utils.cli import main
+from netutil import __version__
+from netutil.cli import main
 
 
 def test_main_prints_version_and_returns_zero(capsys: pytest.CaptureFixture[str]) -> None:
