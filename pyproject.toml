@@ -22,11 +22,11 @@ dev = [
 ]
 
 [project.scripts]
-net-utils = "net_utils.cli:main"
+net-utils = "netutil.cli:main"
 
-# The import package is net_utils (src/net_utils). Explicit, so the wheel never guesses.
+# The import package is netutil (src/netutil). Explicit, so the wheel never guesses.
 [tool.hatch.build.targets.wheel]
-packages = ["src/net_utils"]
+packages = ["src/netutil"]
 
 # ---------------------------------------------------------------- ruff
 [tool.ruff]
@@ -66,7 +66,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["net_utils"]
+known-first-party = ["netutil"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -102,7 +102,7 @@ pythonpath = ["src"]
 
 # ------------------------------------------------------------ coverage
 [tool.coverage.run]
-source = ["net_utils"]
+source = ["netutil"]
 branch = true
 
 [tool.coverage.report]
