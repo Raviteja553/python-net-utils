@@ -70,3 +70,34 @@ def test_report_missing_file_exits_2() -> None:
     r = run_report("nope.txt")
     assert r.returncode == 2
     assert r.stdout == ""
+
+
+VALIDATE = ROOT / "scripts" / "validate_sample.py"
+
+
+def run_validate(*args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(  # noqa: S603
+        [sys.executable, str(VALIDATE), *args],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+        check=False,
+    )
+
+
+def test_validate_good_file() -> None:
+    r = run_validate(str(DATA))
+    assert r.returncode == 0
+    assert "OK: 4 interfaces valid" in r.stdout
+
+
+def test_validate_missing_file_exits_2() -> None:
+    assert run_validate("nope.txt").returncode == 2
+
+
+def test_validate_bad_content_exits_2(tmp_path: Path) -> None:
+    f = tmp_path / "other.txt"
+    f.write_text("hello world\n", encoding="utf-8")
+    r = run_validate(str(f))
+    assert r.returncode == 2
+    assert "no interfaces found" in r.stdout
