@@ -38,3 +38,35 @@ def test_no_arguments_exits_2() -> None:
 
 def test_two_arguments_exits_2() -> None:
     assert run("a", "b").returncode == 2
+
+
+REPORT = ROOT / "scripts" / "interface_status_report.py"
+
+
+def run_report(*args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(  # noqa: S603
+        [sys.executable, str(REPORT), *args],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+        check=False,
+    )
+
+
+def test_report_counts() -> None:
+    r = run_report(str(DATA))
+    assert r.returncode == 0
+    assert "Healthy (up/up): 2" in r.stdout
+    assert "Administratively down: 1" in r.stdout
+    assert "Down (check cable/peer): 1" in r.stdout
+    assert "Suspicious (mixed state): 0" in r.stdout
+
+
+def test_report_fail_on_down_exits_1() -> None:
+    assert run_report(str(DATA), "--fail-on-down").returncode == 1
+
+
+def test_report_missing_file_exits_2() -> None:
+    r = run_report("nope.txt")
+    assert r.returncode == 2
+    assert r.stdout == ""
