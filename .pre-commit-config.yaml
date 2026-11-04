@@ -5,12 +5,6 @@ repos:
       - id: ruff
         args: [--fix]
       - id: ruff-format
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.11.2
-    hooks:
-      - id: mypy
-        pass_filenames: false      # use `files` from pyproject.toml, so imports resolve
-        additional_dependencies: [pytest]
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.18.2
     hooks:
@@ -25,3 +19,9 @@ repos:
     rev: v8.18.2
     hooks:
       - id: gitleaks
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.11.2
+    hooks:
+      - id: mypy
+        pass_filenames: false      # use `files` from pyproject.toml, so imports resolve
+        additional_dependencies: [pytest, "pydantic>=2.0"]
