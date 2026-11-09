@@ -8,7 +8,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from netutil import __version__
-from netutil.logging import configure_logging
+from netutil.jsonlog import configure_logging
 from netutil.parser import parse_interfaces, read_text_file
 
 logger = logging.getLogger(__name__)
