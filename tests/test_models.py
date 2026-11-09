@@ -22,6 +22,10 @@ def good_interface() -> dict[str, Any]:
     }
 
 
+def good_neighbor() -> dict[str, Any]:
+    return {"neighbor_ip": "192.0.2.1", "remote_as": 65001, "state": "Idle"}
+
+
 def test_interface_from_parser_output() -> None:
     parsed = parse_interfaces(DATA.read_text(encoding="utf-8"))
     iface = Interface(**parsed["GigabitEthernet0/1"])
@@ -38,35 +42,6 @@ def test_all_sample_interfaces_are_valid() -> None:
 def test_missing_description_is_none() -> None:
     parsed = parse_interfaces(DATA.read_text(encoding="utf-8"))
     assert Interface(**parsed["TenGigabitEthernet1/0/1"]).description is None
-
-
-def test_valid_bgp_neighbor() -> None:
-    n = BgpNeighbor(
-        neighbor_ip="192.0.2.1",
-        remote_as=65001,
-        state="Established",
-        uptime="1d02h",
-        prefixes_received=12,
-    )
-    assert n.state == "Established"
-
-
-def test_bgp_optional_fields_default_to_none() -> None:
-    n = BgpNeighbor(neighbor_ip="192.0.2.1", remote_as=65001, state="Idle")
-    assert n.uptime is None
-    assert n.prefixes_received is None
-
-
-def test_bgp_bad_ip_rejected() -> None:
-    with pytest.raises(ValidationError):
-        BgpNeighbor(neighbor_ip="not-an-ip", remote_as=65001, state="Idle")
-
-
-def test_bgp_asn_out_of_range_rejected() -> None:
-    with pytest.raises(ValidationError):
-        BgpNeighbor(neighbor_ip="192.0.2.1", remote_as=0, state="Idle")
-    with pytest.raises(ValidationError):
-        BgpNeighbor(neighbor_ip="192.0.2.1", remote_as=4294967296, state="Idle")
 
 
 def test_unknown_status_rejected() -> None:
@@ -86,7 +61,31 @@ def test_all_problems_reported_together() -> None:
     assert exc.value.error_count() == 2
 
 
+def test_valid_bgp_neighbor() -> None:
+    n = BgpNeighbor.model_validate(
+        good_neighbor() | {"state": "Established", "uptime": "1d02h", "prefixes_received": 12}
+    )
+    assert n.state == "Established"
+
+
+def test_bgp_optional_fields_default_to_none() -> None:
+    n = BgpNeighbor.model_validate(good_neighbor())
+    assert n.uptime is None
+    assert n.prefixes_received is None
+
+
 def test_bgp_bad_state_rejected() -> None:
-    bad = {"neighbor_ip": "192.0.2.1", "remote_as": 65001, "state": "Broken"}
     with pytest.raises(ValidationError):
-        BgpNeighbor.model_validate(bad)
+        BgpNeighbor.model_validate(good_neighbor() | {"state": "Broken"})
+
+
+def test_bgp_bad_ip_rejected() -> None:
+    with pytest.raises(ValidationError):
+        BgpNeighbor.model_validate(good_neighbor() | {"neighbor_ip": "not-an-ip"})
+
+
+def test_bgp_asn_out_of_range_rejected() -> None:
+    with pytest.raises(ValidationError):
+        BgpNeighbor.model_validate(good_neighbor() | {"remote_as": 0})
+    with pytest.raises(ValidationError):
+        BgpNeighbor.model_validate(good_neighbor() | {"remote_as": 4294967296})
