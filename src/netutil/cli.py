@@ -8,6 +8,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from netutil import __version__
+from netutil.logging import configure_logging
 from netutil.parser import parse_interfaces, read_text_file
 
 logger = logging.getLogger(__name__)
@@ -58,7 +59,7 @@ def _cmd_parse(args: argparse.Namespace) -> int:
         logger.error("No interfaces found in %s; is this 'show interfaces' output?", args.input)
         return EXIT_BAD_INPUT
 
-    logger.info("Parsed %d interfaces", len(result))
+    logger.info("parsed interfaces", extra={"count": len(result), "path": str(args.input)})
     json.dump(result, sys.stdout, indent=2)
     sys.stdout.write("\n")
     return EXIT_OK
@@ -67,10 +68,7 @@ def _cmd_parse(args: argparse.Namespace) -> int:
 def main(argv: Sequence[str] | None = None) -> int:
     """Run the CLI and return a process exit code."""
     args = build_parser().parse_args(argv)
-    logging.basicConfig(
-        level=logging.DEBUG if args.verbose else logging.INFO,
-        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-    )
+    configure_logging(args.verbose)
     logger.debug("net-utils %s starting", __version__)
     return int(args.func(args))
 
