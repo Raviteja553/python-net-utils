@@ -24,10 +24,10 @@ def test_valid_file_prints_json() -> None:
     assert len(json.loads(r.stdout)) == 4
 
 
-def test_missing_file_exits_2() -> None:
+def test_missing_file_exits_3() -> None:
     r = run("nope.txt")
-    assert r.returncode == 2
-    assert r.stdout == ""
+    assert r.returncode == 3
+    assert json.loads(r.stdout)["error"] == "InputFileError"
 
 
 def test_no_arguments_exits_2() -> None:

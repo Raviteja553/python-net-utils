@@ -1,3 +1,5 @@
+"""Command-line entry point for netutil."""
+
 from __future__ import annotations
 
 import argparse
@@ -6,15 +8,14 @@ import logging
 import sys
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
 from netutil import __version__
+from netutil.errors import NetutilError
 from netutil.jsonlog import configure_logging
-from netutil.parser import parse_interfaces, read_text_file
+from netutil.service import load_interfaces
 
 logger = logging.getLogger(__name__)
-
-EXIT_OK = 0
-EXIT_BAD_INPUT = 2
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -41,28 +42,27 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _cmd_parse(args: argparse.Namespace) -> int:
-    """Read the input file, parse it, write the result to stdout."""
-    try:
-        text = read_text_file(args.input)
-    except FileNotFoundError:
-        logger.error("File not found: %s", args.input)
-        return EXIT_BAD_INPUT
-    except (PermissionError, IsADirectoryError) as exc:
-        logger.error("Cannot read %s: %s", args.input, exc.strerror)
-        return EXIT_BAD_INPUT
-    except UnicodeDecodeError as exc:
-        logger.error("%s is not a UTF-8 text file (%s)", args.input, exc.reason)
-        return EXIT_BAD_INPUT
-
-    result = parse_interfaces(text)
-    if not result:
-        logger.error("No interfaces found in %s; is this 'show interfaces' output?", args.input)
-        return EXIT_BAD_INPUT
-
-    logger.info("parsed interfaces", extra={"count": len(result), "path": str(args.input)})
-    json.dump(result, sys.stdout, indent=2)
+    """Load, validate and print the interfaces as JSON."""
+    interfaces = load_interfaces(args.input)
+    logger.info("parsed interfaces", extra={"count": len(interfaces), "path": str(args.input)})
+    data = {name: iface.model_dump() for name, iface in interfaces.items()}
+    json.dump(data, sys.stdout, indent=2)
     sys.stdout.write("\n")
-    return EXIT_OK
+    return 0
+
+
+def _error_payload(exc: NetutilError) -> dict[str, Any]:
+    """Describe a failure as data, for scripts that call the CLI."""
+    payload: dict[str, Any] = {
+        "ok": False,
+        "error": type(exc).__name__,
+        "exit_code": exc.exit_code,
+        "message": str(exc),
+    }
+    problems = getattr(exc, "problems", None)
+    if problems is not None:
+        payload["problems"] = problems
+    return payload
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -70,7 +70,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     configure_logging(args.verbose)
     logger.debug("net-utils %s starting", __version__)
-    return int(args.func(args))
+
+    try:
+        return int(args.func(args))
+    except NetutilError as exc:
+        logger.error(
+            "command failed",
+            extra={"error": type(exc).__name__, "exit_code": exc.exit_code, "detail": str(exc)},
+        )
+        json.dump(_error_payload(exc), sys.stdout, indent=2)
+        sys.stdout.write("\n")
+        return exc.exit_code
 
 
 if __name__ == "__main__":
